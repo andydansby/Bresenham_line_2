@@ -1,0 +1,26 @@
+
+
+org	#8000
+
+
+deltaX = abs(xx2 - xx1);
+deltaX = #809C
+
+
+
+deltaY = abs(yy2 - yy1);
+deltaY = #809E
+
+
+
+
+
+
+
+
+
+
+
+
+
+
