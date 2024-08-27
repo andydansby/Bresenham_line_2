@@ -2,33 +2,125 @@ org $9200
 
 ; if (dx > dy)
 
-;buggy not working on diagonals
-;issue seems to be in the fraction calculation 
-
-PUBLIC dxLarger
+PUBLIC dxLarger         ;$9200
 dxLarger:
+;jp dxLarger
+;;;;;;;;;;;;;;;;;;
 
-;check
-; dx $8088
-; dy $808A
-; dxABS $808C
-; dyABS $808E
-; x2x1 $8090 $8091 LSB order
-; y2y1 $8092 $8093 LSB order
-;;;;;;;;;;;;;;;;;; 
+
 
 DX_loop1:				;$9200
-;;;;;;;;;;;;;;;;;;
-;int fraction = 2 * dy - dx
-;(2 * dy) - dx
-;;;;;;;;;;;;;;;;;;
-    ld HL, (dyABS)
-	add HL, HL			; multiply dyABS by 2
-	ld DE, (dxABS)	
-	sbc HL, DE			; subtract DX
-	ld (fraction), HL
-						;;answer in HL and pass to variable
-end_inital_fraction_calculation1:
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;fraction = deltaY - (deltaX >> 1);
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;first we divide deltaX
+    ld DE, (deltaX)
+; Shift the high byte (H) right by 1
+    srl D  ; Logical shift right high byte of HL
+; Rotate the low byte (L) right through carry
+    rr E   ; Rotate right low byte of HL through carry
+
+;now subtract out deltaY
+    ld HL, (deltaY)
+    or A
+    sbc HL, DE
+
+;answer in HL
+    ld (fraction), HL
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;for (iterations = 0; iterations <= steps; iterations++)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    ;ld A, 00
+    xor A
+    ld (iterations), A
+    ;set iterations to 0
+
+DX_iteration:
+
+;PLOT ROUTINE
+; loading a 16 bit variable into 8 bits
+; only because buffer will be 16 bits
+; for right now nothing over 191
+;ld A, (line_y1)
+;ld (plot_y), A
+;ld A, (line_x1)
+;ld (plot_x), A
+;call _joffa_pixel2
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;if (fraction >= 0)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    ld HL, (fraction)
+    ; to check if fraction is larger than 0 only need to check high byte
+    ld A, H
+    or A
+    jp p, DX_less_than_0
+;end IF
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;yy1 += stepy;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ld HL, (line_y1)
+    ld D, 0
+    ld E, (stepy)
+
+;fraction -= deltaX;
+
+
+
+
+
+
+DX_less_than_0:
+
+
+
+
+
+
+; iteration step
+; Increment iterations
+    ld A, (iterations)
+    inc A
+    ld (iterations), A
+; iteration step
+; Compare iterations with steps
+    ld E, A
+    ld A, (steps)
+    sbc A, E
+    jp z, finished
+    jp DX_iteration
+
+finished:
+
+
+
+
+
+
+
+test_stop:
+    jp test_stop
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ;;;;;;;;;;;;;;;;;;
 ;while (x != x2)
@@ -37,11 +129,11 @@ DX_while:					;$920D
 	ld HL, (line_x2)	;grab value of x2
 	ld DE, (gfx_x)		;grab value of X
 	sbc HL, DE			;check to see if X == X2
-	
+
 	jp z, end_DX_larger	;check to see if equal
 						;if equal, break out of loop
 	; if not then fall through
-	
+
 ;;;;;;;;;;;;;;;;;;
 ;x += stepx;
 ;;;;;;;;;;;;;;;;;;
@@ -79,37 +171,37 @@ DX_fraction_funct:			;$9224
 DX_fraction_equal:				;$9237
 DX_fraction_greater:			;$9237
 
-;;;;;;;;;;;;;;;;;;	
+;;;;;;;;;;;;;;;;;;
 ;y += stepy; <----PROBLEM? 	$9237 ?
 ;;;;;;;;;;;;;;;;;;
 stepY_DX:					;$9237
 	;ld HL, (stepy)
-	
+
 	ld A, (stepy)
 	ld H, $00
 	ld L, A
-	
-	ld DE, (gfx_y)
-	
-	add HL, DE				;add Y + stepY
-	ld (gfx_y), HL			;store the answer 
 
-;;;;;;;;;;;;;;;;;;	
+	ld DE, (gfx_y)
+
+	add HL, DE				;add Y + stepY
+	ld (gfx_y), HL			;store the answer
+
+;;;;;;;;;;;;;;;;;;
 	;fraction -= 2 * dx;
 ;;;;;;;;;;;;;;;;;;
 DX_fraction:				;$9242
 	ld HL, (dxABS)
 	add HL, HL				;answer 2 * DX
-	
+
 	;move this to DE
 	push HL
 	pop DE
-	
+
 	ld HL, (fraction)
 	sbc HL, DE
 	ld (fraction), HL
-	
-	jp DX_fraction_funct	;loop back to test if fraction 
+
+	jp DX_fraction_funct	;loop back to test if fraction
 							;is greater of equal to 0
 
 ;;;;;;;;;;;;
@@ -124,13 +216,13 @@ end_DX_fraction:
 ;every beyond this point will change
 DX_fraction_lesser:		;$9255 will change
 
-;;;;;;;;;;;;;;;;;;	
+;;;;;;;;;;;;;;;;;;
 	;fraction += 2 * dy;
 ;;;;;;;;;;;;;;;;;;
 	ld HL, (dyABS)
 	add HL, HL			;answer 2 * DY
 	ld DE, (fraction)
-	
+
 	add HL, DE			; add fraction answer in HL
 
 	ld (fraction), HL
@@ -143,7 +235,7 @@ DX_fraction_lesser:		;$9255 will change
 	; for right now nothing over 191
 	ld A, (gfx_y)
 	ld (plot_y), A
-	
+
 	; loading a 16 bit variable into 8 bits
 	; only because buffer will be 16 bits
 	; for right now nothing over 191
@@ -151,29 +243,29 @@ DX_fraction_lesser:		;$9255 will change
 	ld (plot_x), A
     ;rtunes_pixel();
 	call _joffa_pixel2
-	
-	jp DX_while				;loop around again to check 
+
+	jp DX_while				;loop around again to check
 							;if x = x2
 
 ;STOP
 DX_forever_loop1:			;$9257
     jp DX_forever_loop1
-	
-	
-	
-	
+
+
+
+
 end_DX_larger:
 	jp end_DX_larger
-	
-	
+
+
 ;jp endless
-;	
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 
-	
-	
+
+
 
 
 
@@ -245,9 +337,9 @@ greaterThanHL_1:
     ; A was not less than the operand, and was not
     ; equal to the operand. Therefore it must have
     ; been greater than the operand.
-    
-    
-    
+
+
+
 ;;;;;;;;;;;;;;;;;;
 ;            x1 += stepx;
 ;    ld HL, (x1)
@@ -296,11 +388,11 @@ loop_again:
 ;    ld HL, (x1)
 ;    ld DE, (x2)
 ;    sbc HL, DE
-	
-	
+
+
     ;check to see if x1 and x2 are equal
     ;if they are not equal loop
-    ;jr nz, DX_loop  ;jp nz, DX_loop 
+    ;jr nz, DX_loop  ;jp nz, DX_loop
 ;   } while (x1 != x2)
 ;working on
 

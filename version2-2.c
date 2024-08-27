@@ -8,9 +8,9 @@ void bresenham_optimized(int xx1, int yy1, int xx2, int yy2)
     int fraction;
     int steps = (deltaX > deltaY) ? deltaX : deltaY;
 
-    if (deltaX > deltaY)
+    if (deltaX > deltaY)//deltaX larger
     {
-        fraction = deltaY - (deltaX >> 1);
+        fraction = deltaY - (deltaX >> 1);// >>1 == divide by 2 = right shift 1 place
         for (iterations = 0; iterations <= steps; iterations++)
         {
             /* buffer_plotX = xx1;
@@ -26,9 +26,9 @@ void bresenham_optimized(int xx1, int yy1, int xx2, int yy2)
             fraction += deltaY;
         }
     }
-    else
+    else        //deltaY larger or equal
     {
-        fraction = deltaX - (deltaY >> 1);
+        fraction = deltaX - (deltaY >> 1);// >>1 == divide by 2 = right shift 1 place
         for (iterations = 0; iterations <= steps; iterations++)
         {
             /* buffer_plotX = xx1;

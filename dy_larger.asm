@@ -2,32 +2,39 @@ org $9300
 
 ; if (dy >= dx)
 
-
-
-
-PUBLIC dyLarger
+PUBLIC dyLarger         ;$9300
 dyLarger:
 ;    jp dyLarger
-;;;;;;;;;;;;;;;;;; 
-
-
-
-
-
-
-
-
-DY_loop1:				;$9200
 ;;;;;;;;;;;;;;;;;;
-;int fraction = 2 * dx - dy
-;(2 * dx) - dy
+
+
+
+DY_loop1:				;$9300
 ;;;;;;;;;;;;;;;;;;
-	ld HL, (dxABS)
-	add HL, HL			; multiply HL by 2
-	ld DE, (dyABS)	
-	sbc HL, DE			;subtract DX
-	ld (fraction), HL
-						;;answer in HL and pass to variable
+;fraction = deltaX - (deltaY >> 1);
+;;;;;;;;;;;;;;;;;;
+
+;first we divide deltaY
+    ld DE, (deltaY)
+; Shift the high byte (H) right by 1
+    srl D  ; Logical shift right high byte of HL
+; Rotate the low byte (L) right through carry
+    rr E   ; Rotate right low byte of HL through carry
+
+;now subtract out deltaX
+    ld HL, (deltaX)
+    or A
+    sbc HL, DE
+
+;answer in HL
+    ld (fraction), HL
+
+
+endless_loop2:
+    jp endless_loop2
+
+
+
 end_inital_fraction_calculation2:
 
 ;;;;;;;;;;;;;;;;;;
@@ -37,11 +44,11 @@ DY_while:					;$920D
 	ld HL, (line_y2)	;grab value of x2
 	ld DE, (gfx_y)		;grab value of X
 	sbc HL, DE			;check to see if X == X2
-	
+
 	jp z, end_DY_larger	;check to see if equal
 						;if equal, break out of loop
 	; if not then fall through
-	
+
 ;;;;;;;;;;;;;;;;;;
 ;y += stepy;
 ;;;;;;;;;;;;;;;;;;
@@ -53,10 +60,10 @@ stepY_func:				;$9219
 	ld L, A
 	ld (gfx_y), HL
 	;;answer in HL and pass to variable
-	
+
 ;;;;;;;;;;;;;;;;;;
 ;if (fraction >= 0)
-;;;;;;;;;;;;;;;;;;	
+;;;;;;;;;;;;;;;;;;
 DY_fraction_funct:			;$9224
 	xor A					;reset flags
 	ld DE, (fraction)
@@ -65,7 +72,7 @@ DY_fraction_funct:			;$9224
 
 	;DO NOT store Fraction, only for comparasion against 0
 	;Greater / Lesser or Equal
-	
+
 	jp z, DY_fraction_equal		;check to see if equal to 0
 	jp m, DY_fraction_greater	;jump if greater than 0
 								; sign flag IS set
@@ -78,38 +85,38 @@ DY_fraction_funct:			;$9224
 ;;;;;;;;;;;;;;;;
 DY_fraction_equal:				;$9237
 DY_fraction_greater:			;$9237
-	
-;;;;;;;;;;;;;;;;;;	
-;x += stepx; <----PROBLEM? 
+
+;;;;;;;;;;;;;;;;;;
+;x += stepx; <----PROBLEM?
 ;;;;;;;;;;;;;;;;;;
 stepY_DY:					;$9237
 	;ld HL, (stepx)
-	
+
 	ld A, (stepx)
 	ld H, $00
 	ld L, A
-	
+
 	ld DE, (gfx_x)
-	
+
 	add HL, DE				;add Y + stepY
 	ld (gfx_x), HL			;store the answer
-	
-;;;;;;;;;;;;;;;;;;	
+
+;;;;;;;;;;;;;;;;;;
 	;fraction -= 2 * dy;
 ;;;;;;;;;;;;;;;;;;
 DY_fraction:				;$9242
 	ld HL, (dyABS)
 	add HL, HL				;answer 2 * DY
-	
+
 	;move this to DE
 	push HL
 	pop DE
-	
+
 	ld HL, (fraction)
 	sbc HL, DE
 	ld (fraction), HL
-	
-	jp DY_fraction_funct	;loop back to test if fraction 
+
+	jp DY_fraction_funct	;loop back to test if fraction
 							;is greater of equal to 0
 
 ;;;;;;;;;;;;
@@ -120,17 +127,17 @@ end_DY_fraction:
 ;;;;;;;;;;;;
 ; STOPPED
 ;;;;;;;;;;;;
-	
+
 ;every beyond this point will change
 DY_fraction_lesser:		;$9255 will change
 
-;;;;;;;;;;;;;;;;;;	
+;;;;;;;;;;;;;;;;;;
 	;fraction += 2 * dx;
 ;;;;;;;;;;;;;;;;;;
 	ld HL, (dxABS)
 	add HL, HL			;answer 2 * DY
 	ld DE, (fraction)
-	
+
 	add HL, DE			; add fraction answer in HL
 
 	ld (fraction), HL
@@ -143,7 +150,7 @@ DY_fraction_lesser:		;$9255 will change
 	; for right now nothing over 191
 	ld A, (gfx_y)
 	ld (plot_y), A
-	
+
 	; loading a 16 bit variable into 8 bits
 	; only because buffer will be 16 bits
 	; for right now nothing over 191
@@ -151,50 +158,50 @@ DY_fraction_lesser:		;$9255 will change
 	ld (plot_x), A
     ;rtunes_pixel();
 	call _joffa_pixel2
-	
-	
-	
-	
-	
-	
-	
-	
+
+
+
+
+
+
+
+
 	jp DY_while
 
 ;STOP
 DY_forever_loop2:			;$9257
     jp DY_forever_loop2
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 
-	
-	
-	
-	
-	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 end_DY_larger:
-	
-	
+
+
 
 forever_loop:
     jp forever_loop
@@ -204,7 +211,7 @@ forever_loop:
 
 
 ; jp nz, nnnn
-	; if the Zero flag is unset, nn is copied to the PC 
+	; if the Zero flag is unset, nn is copied to the PC
 ; jp nnnn
 ; jp z, nnnn
 ; jp nc, nnnn

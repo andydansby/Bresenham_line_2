@@ -5,10 +5,10 @@ org $8080
 
 
 ;input variables
-line_x1:	defw 1 		;$8080	line start point X
+line_x1:	defw 0 		;$8080	line start point X
 line_y1:	defw 5 		;$8082	line start point Y
-line_x2:	defw 4 	;$8084	line end point X
-line_y2:	defw 0		;$8086	line end point Y
+line_x2:	defw 5  	;$8084	line end point X
+line_y2:	defw 5		;$8086	line end point Y
 
 ;dx larger $9200
 ;dy larger $9300
@@ -49,6 +49,7 @@ PUBLIC deltaY
 
 pixel_sum:	defb 00
 iterations:	defb 00
+steps:      defb 00
 
 
 stepx:		defb 00		;$80A2

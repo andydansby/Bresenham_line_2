@@ -45,10 +45,48 @@ dy_step_end:
 
 
 
+DX_loop1:				;$9200
+;;;;;;;;;;;;;;;;;;
+;fraction = deltaY - (deltaX >> 1);
 
 
 
 
+
+
+
+
+;first we divide deltaX
+    ld HL, (deltaX)
+; Shift the high byte (H) right by 1
+    srl H  ; Logical shift right high byte of HL
+; Rotate the low byte (L) right through carry
+    rr L   ; Rotate right low byte of HL through carry
+
+;now subtract out deltaY
+    ld DE, (deltaY)
+    or A
+    sbc HL, DE
+
+;answer in HL
+
+
+endless_loop1:
+    jp endless_loop1
+
+
+DY_loop1:				;$9200
+;;;;;;;;;;;;;;;;;;
+;int fraction = 2 * dx - dy
+;(2 * dx) - dy
+;;;;;;;;;;;;;;;;;;
+	ld HL, (dxABS)
+	add HL, HL			; multiply HL by 2
+	ld DE, (dyABS)
+	sbc HL, DE			;subtract DX
+	ld (fraction), HL
+						;;answer in HL and pass to variable
+end_inital_fraction_calculation2:
 
 
 
