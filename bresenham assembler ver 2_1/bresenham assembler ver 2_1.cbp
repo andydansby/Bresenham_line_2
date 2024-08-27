@@ -17,7 +17,6 @@
 			</Target>
 		</Build>
 		<Unit filename="../bresenham.asm" />
-		<Unit filename="../bresenham2.asm" />
 		<Unit filename="../compile.bat" />
 		<Unit filename="../dx_larger.asm" />
 		<Unit filename="../dy_larger.asm" />
